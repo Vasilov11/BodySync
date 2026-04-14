@@ -2582,3 +2582,242 @@ html {
   transform: translateY(-4px);
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
+
+
+.guest-hero {
+  position: relative;
+  min-height: 620px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  align-items: center;
+  background:
+          linear-gradient(90deg, rgba(255, 236, 229, 0.92) 0%, rgba(255, 244, 240, 0.78) 32%, rgba(255, 255, 255, 0.18) 58%, rgba(255, 255, 255, 0.02) 100%),
+          url("../src/assets/home-page.png");
+  background-size: cover;
+  background-position: center ;
+  background-repeat: no-repeat;
+  border-radius: 28px;
+  padding: 46px 44px;
+  overflow: hidden;
+  box-shadow: none;
+  margin-bottom: 34px;
+}
+
+.guest-floating-card {
+  max-width: 760px;
+  background: linear-gradient(135deg, rgba(24, 33, 58, 0.96), rgba(53, 70, 110, 0.88));
+  border-radius: 28px;
+  padding: 40px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guest-floating-card h1 {
+  margin: 0 0 18px 0;
+  font-size: 60px;
+  line-height: 1.05;
+  color: white;
+  max-width: 700px;
+}
+
+.guest-floating-card p {
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 19px;
+  line-height: 1.5;
+  max-width: 640px;
+  margin-bottom: 26px;
+}
+
+.guest-hero-info {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 2;
+}
+
+.guest-info-card {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(71, 85, 105, 0.78);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+}
+
+.guest-info-card h3 {
+  margin-top: 0;
+  margin-bottom: 22px;
+  font-size: 34px;
+  color: white;
+}
+
+.guest-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.guest-info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.guest-info-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #4ade80);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.guest-info-item strong {
+  display: block;
+  color: white;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.guest-info-item p {
+  margin: 0;
+  color: #e2e8f0;
+  line-height: 1.45;
+  font-size: 15px;
+}
+
+.guest-goals-section {
+  margin-top: 8px;
+}
+
+.guest-section-header {
+  margin-bottom: 24px;
+}
+
+.guest-section-badge {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.guest-section-header h2 {
+  margin: 0 0 10px 0;
+  font-size: 38px;
+  color: #0f172a;
+}
+
+.guest-section-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 17px;
+  max-width: 720px;
+}
+
+.guest-goals-grid {
+  margin-top: 0;
+}
+
+.guest-goal-card {
+  min-height: 180px;
+  border-radius: 24px;
+  padding: 28px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.guest-goal-card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 22px;
+  color: #0f172a;
+}
+
+.guest-goal-card p {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.guest-goal-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
+}
+
+@media (max-width: 1100px) {
+  .guest-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 30px 24px;
+    gap: 24px;
+    background-position: center;
+  }
+
+  .guest-floating-card h1 {
+    font-size: 40px;
+  }
+
+  .guest-info-card {
+    max-width: 100%;
+  }
+
+  .guest-goals-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-section-header h2 {
+    font-size: 30px;
+  }
+}
+.guest-info-inline {
+  margin-top: 28px;
+}
+
+.guest-info-inline h3 {
+  color: white;
+  margin-bottom: 14px;
+  font-size: 20px;
+}
+
+.guest-info-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+.guest-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guest-info-item p {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 15px;
+}
+
+.guest-info-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #4ade80);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}

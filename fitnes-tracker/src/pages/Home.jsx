@@ -99,66 +99,104 @@ function Home() {
     if (!user || !user.fullName) {
         return (
             <div className="page home-page">
-                <section className="home-hero-smart">
-                    <div className="home-hero-content">
-                        <span className="home-badge">Fitness Web App</span>
-                        <h1>Track your fitness. Follow plans. Build better habits.</h1>
-                        <p>
-                            Create your profile, choose your goal, explore workout plans,
-                            and monitor your progress with sessions, calories, BMI, and more.
-                        </p>
+                <section className="home-hero-smart guest-hero">
+                    <div className="home-hero-left-wrap">
+                        <div className="home-hero-content hero-floating-card guest-floating-card">
+                            <span className="home-badge">Fitness Web App</span>
 
-                        <div className="home-hero-buttons">
-                            <Link to="/register" className="home-primary-btn">
-                                Get Started
-                            </Link>
-                            <Link to="/login" className="home-secondary-btn">
-                                Login
-                            </Link>
-                            <Link to="/plans" className="home-secondary-btn">
-                                Explore Plans
-                            </Link>
-                        </div>
-                    </div>
+                            <h1>
+                                Build better habits. Track every workout. Stay consistent.
+                            </h1>
 
-                    <div className="home-hero-side">
-                        <div className="home-glass-card">
-                            <h3>Why use Fitness Tracker?</h3>
-                            <ul>
-                                <li>Track workouts and sessions</li>
-                                <li>View calories and activity history</li>
-                                <li>Monitor BMI and profile stats</li>
-                                <li>Choose plans based on your goal</li>
-                            </ul>
+                            <p>
+                                BodySync helps you organize your workouts, follow goal-based plans,
+                                monitor calories and BMI, and keep your progress in one clean place.
+                            </p>
+
+                            <div className="home-hero-buttons">
+                                <Link to="/register" className="home-primary-btn">
+                                    Get Started
+                                </Link>
+
+                                <Link to="/login" className="home-secondary-btn">
+                                    Login
+                                </Link>
+
+                                <Link to="/plans" className="home-secondary-btn">
+                                    Explore Plans
+                                </Link>
+                            </div>
+
+                            {/* WHY SECTION */}
+                            <div className="guest-info-inline">
+                                <h3>Why choose BodySync?</h3>
+
+                                <div className="guest-info-list">
+                                    <div className="guest-info-item">
+                                        <span className="guest-info-icon">✓</span>
+                                        <p>Track workouts and sessions easily</p>
+                                    </div>
+
+                                    <div className="guest-info-item">
+                                        <span className="guest-info-icon">✓</span>
+                                        <p>Follow plans based on your goal</p>
+                                    </div>
+
+                                    <div className="guest-info-item">
+                                        <span className="guest-info-icon">✓</span>
+                                        <p>Monitor calories, BMI, and progress</p>
+                                    </div>
+
+                                    <div className="guest-info-item">
+                                        <span className="guest-info-icon">✓</span>
+                                        <p>Stay consistent and motivated</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="home-goals-section">
-                    <h2>Choose Your Goal</h2>
-                    <div className="home-goals-grid">
+                <section className="guest-goals-section">
+                    <div className="guest-section-header">
+                        <span className="guest-section-badge">Choose Your Goal</span>
+
+                        <h2>Start with the plan that fits you best</h2>
+
+                        <p>
+                            Pick your main goal and explore workout plans designed for your progress.
+                        </p>
+                    </div>
+
+                    <div className="home-goals-grid guest-goals-grid">
                         <Link
                             to="/plans?goal=build%20muscle"
-                            className="home-goal-card home-goal-link"
+                            className="home-goal-card home-goal-link guest-goal-card"
                         >
                             <h3>Build Muscle</h3>
-                            <p>Strength-focused plans with progressive overload and structure.</p>
+                            <p>
+                                Strength-focused plans with progressive overload and structured workouts.
+                            </p>
                         </Link>
 
                         <Link
                             to="/plans?goal=lose%20weight"
-                            className="home-goal-card home-goal-link"
+                            className="home-goal-card home-goal-link guest-goal-card"
                         >
                             <h3>Lose Weight</h3>
-                            <p>Burn calories with cardio, HIIT, and fat-loss routines.</p>
+                            <p>
+                                Burn calories with cardio, HIIT, and efficient fat-loss routines.
+                            </p>
                         </Link>
 
                         <Link
                             to="/plans?goal=stay%20fit"
-                            className="home-goal-card home-goal-link"
+                            className="home-goal-card home-goal-link guest-goal-card"
                         >
                             <h3>Stay Fit</h3>
-                            <p>Maintain an active lifestyle with balanced training plans.</p>
+                            <p>
+                                Maintain an active lifestyle with balanced training and healthy habits.
+                            </p>
                         </Link>
                     </div>
                 </section>
