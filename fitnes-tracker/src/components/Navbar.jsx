@@ -29,7 +29,7 @@ function Navbar() {
                 <NavLink to="/workouts" className={({ isActive }) => (isActive ? "active" : "")}>
                     Workouts
                 </NavLink>
-
+                <NavLink to="/food">Food</NavLink>
                 <NavLink to="/progress" className={({ isActive }) => (isActive ? "active" : "")}>
                     Progress
                 </NavLink>
