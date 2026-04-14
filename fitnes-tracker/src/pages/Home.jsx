@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
+import heroImage from "../assets/home-page.png";
 
 function Home() {
     const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -26,12 +26,6 @@ function Home() {
             return new Date(b.createdAt) - new Date(a.createdAt);
         })[0];
     }, [workouts]);
-
-
-
-    const navigate = useNavigate();
-
-
 
     useEffect(() => {
         const fetchWorkouts = async () => {
@@ -102,13 +96,10 @@ function Home() {
         ];
     }, [user]);
 
-
-
-    if (!user) {
+    if (!user || !user.fullName) {
         return (
             <div className="page home-page">
                 <section className="home-hero-smart">
-
                     <div className="home-hero-content">
                         <span className="home-badge">Fitness Web App</span>
                         <h1>Track your fitness. Follow plans. Build better habits.</h1>
@@ -178,40 +169,38 @@ function Home() {
     return (
         <div className="page home-page">
             <section className="home-hero-smart logged-in-hero">
-                <div className="home-hero-content">
-                    <span className="home-badge">Welcome Back</span>
-                    <h1>{user.fullName ? `Hello, ${user.fullName}` : "Welcome back"}</h1>
-                    <p>
-                        Keep going with your fitness journey. Check your stats, continue
-                        your workout plan, and stay consistent.
-                    </p>
+                <div className="home-hero-left-wrap">
+                    <div className="home-hero-content hero-floating-card">
+                        <span className="home-badge">Welcome Back</span>
+                        <h1>{user.fullName ? `Hello, ${user.fullName}` : "Welcome back"}</h1>
+                        <p>
+                            Keep going with your fitness journey. Check your stats, continue
+                            your workout plan, and stay consistent.
+                        </p>
 
-                    <div className="home-hero-buttons">
-                        <Link to="/workouts" className="home-primary-btn">
-                            Start Workout
-                        </Link>
-                        <Link to="/progress" className="home-secondary-btn">
-                            View Progress
-                        </Link>
-                        <Link to="/profile" className="home-secondary-btn">
-                            Open Profile
-                        </Link>
-                        <Link to="/plans" className="home-secondary-btn">
-                            Browse Plans
-                        </Link>
+                        <div className="home-hero-buttons">
+                            <Link to="/workouts" className="home-primary-btn">
+                                Start Workout
+                            </Link>
+                            <Link to="/progress" className="home-secondary-btn">
+                                View Progress
+                            </Link>
+                            <Link to="/profile" className="home-secondary-btn">
+                                Open Profile
+                            </Link>
+                            <Link to="/plans" className="home-secondary-btn">
+                                Browse Plans
+                            </Link>
+                        </div>
                     </div>
                 </div>
 
-                <div className="home-glass-card goal-card">
-                    <h3>Your Current Goal</h3>
-
-                    <div className="goal-big-text">
-                        {user.goal || "No Goal"}
-                    </div>
+                <div className="hero-image-side">
+                    <img src={heroImage} alt="Fitness hero" className="hero-side-image" />
                 </div>
             </section>
 
-            <section className="home-stats-section">
+            <section className="home-stats-section floating-stats">
                 <div className="home-stats-grid">
                     <div className="home-stat-card">
                         <span>Total Sessions</span>
@@ -238,21 +227,27 @@ function Home() {
             <section className="home-dashboard-grid">
                 <div className="home-panel">
                     <h2>Latest Workout</h2>
-                    {latestWorkout ? (
-                        <div className="home-latest-workout">
-                            <h3>{latestWorkout.name}</h3>
-                            <p>Date: {latestWorkout.date}</p>
-                            <p>Total Calories: {latestWorkout.totalCalories} kcal</p>
-                            <p>Exercises: {latestWorkout.exercises.length}</p>
 
-                            <div className="home-chip-list">
-                                {latestWorkout.exercises?.map((exercise) => (
-                                    <span key={exercise.id} className="home-chip">
-                                        {exercise.name || exercise.exercise}
-                                </span>
-                                ))}
+                    {latestWorkout ? (
+                        <Link
+                            to={`/workouts?session=${latestWorkout._id}`}
+                            className="latest-workout-link"
+                        >
+                            <div className="home-latest-workout clickable-card">
+                                <h3>{latestWorkout.name}</h3>
+                                <p>Date: {latestWorkout.date}</p>
+                                <p>Total Calories: {latestWorkout.totalCalories} kcal</p>
+                                <p>Exercises: {latestWorkout.exercises.length}</p>
+
+                                <div className="home-chip-list">
+                                    {latestWorkout.exercises?.map((exercise, index) => (
+                                        <span key={exercise.id || index} className="home-chip">
+                            {exercise.name || exercise.exercise}
+                        </span>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        </Link>
                     ) : (
                         <p className="home-muted-text">No workout sessions yet.</p>
                     )}
