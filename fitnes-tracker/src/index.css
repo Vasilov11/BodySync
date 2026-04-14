@@ -2302,4 +2302,16 @@ html {
   }
 }
 
+.latest-workout-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.latest-workout-link * {
+  text-decoration: none;
+  color: inherit;
+}
+
+
 
