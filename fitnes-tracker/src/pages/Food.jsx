@@ -277,6 +277,69 @@ function Food() {
                 : 0,
     };
 
+    const recipes = [
+        {
+            id: 1,
+            title: "Chicken Rice Bowl",
+            image: "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop",
+            calories: "520 kcal",
+            protein: "38 g",
+            carbs: "46 g",
+            fat: "18 g",
+            ingredients: "Chicken, rice, peas, carrots, corn",
+        },
+        {
+            id: 2,
+            title: "Salmon Pasta",
+            image: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?q=80&w=1200&auto=format&fit=crop",
+            calories: "610 kcal",
+            protein: "34 g",
+            carbs: "58 g",
+            fat: "24 g",
+            ingredients: "Salmon, pasta, cream, garlic, spinach",
+        },
+        {
+            id: 3,
+            title: "Beef Fried Rice",
+            image: "https://images.unsplash.com/photo-1603133872878-684f208fb84b?q=80&w=1200&auto=format&fit=crop",
+            calories: "560 kcal",
+            protein: "32 g",
+            carbs: "51 g",
+            fat: "21 g",
+            ingredients: "Beef, rice, egg, vegetables, soy sauce",
+        },
+        {
+            id: 4,
+            title: "Greek Chicken Salad",
+            image: "https://images.unsplash.com/photo-1546793665-c74683f339c1?q=80&w=1200&auto=format&fit=crop",
+            calories: "430 kcal",
+            protein: "35 g",
+            carbs: "16 g",
+            fat: "22 g",
+            ingredients: "Chicken, lettuce, tomato, cucumber, feta",
+        },
+        {
+            id: 5,
+            title: "Protein Oat Bowl",
+            image: "https://images.unsplash.com/photo-1517673400267-0251440c45dc?q=80&w=1200&auto=format&fit=crop",
+            calories: "390 kcal",
+            protein: "24 g",
+            carbs: "45 g",
+            fat: "11 g",
+            ingredients: "Oats, milk, banana, peanut butter, whey",
+        },
+        {
+            id: 6,
+            title: "Turkey Wrap",
+            image: "https://images.unsplash.com/photo-1539252554453-80ab65ce3586?q=80&w=1200&auto=format&fit=crop",
+            calories: "470 kcal",
+            protein: "31 g",
+            carbs: "39 g",
+            fat: "17 g",
+            ingredients: "Turkey, tortilla, cheese, lettuce, sauce",
+        },
+    ];
+
     return (
         <div className="page food-page">
             <section className="food-hero-card">
@@ -416,29 +479,49 @@ function Food() {
                     {message && <p className="success-message">{message}</p>}
                 </div>
 
-                <div className="food-panel">
-                    <h2>Today Summary</h2>
-                    <div className="food-summary-grid">
-                        <div className="food-summary-card">
-                            <span>Entries Today</span>
-                            <strong>{todayEntries.length}</strong>
-                        </div>
-                        <div className="food-summary-card">
-                            <span>Eaten Calories</span>
-                            <strong>{todayTotals.calories.toFixed(1)} kcal</strong>
-                        </div>
-                        <div className="food-summary-card">
-                            <span>Eaten Protein</span>
-                            <strong>{todayTotals.protein.toFixed(1)} g</strong>
-                        </div>
-                        <div className="food-summary-card">
-                            <span>Eaten Carbs</span>
-                            <strong>{todayTotals.carbs.toFixed(1)} g</strong>
-                        </div>
-                        <div className="food-summary-card">
-                            <span>Eaten Fat</span>
-                            <strong>{todayTotals.fat.toFixed(1)} g</strong>
-                        </div>
+                <div className="food-panel food-recipes-panel">
+                    <div className="food-recipes-header">
+                        <h2>Trending Recipes</h2>
+                        <p>Hover over a recipe card to see nutrition details.</p>
+                    </div>
+
+                    <div className="recipe-cards-grid">
+                        {recipes.slice(0, 4).map((recipe) => (
+                            <div key={recipe.id} className="recipe-flip-card">
+                                <div className="recipe-flip-inner">
+                                    <div className="recipe-card-front">
+                                        <img src={recipe.image} alt={recipe.title} className="recipe-card-image" />
+                                        <div className="recipe-card-front-content">
+                                            <h3>{recipe.title}</h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="recipe-card-back">
+                                        <h3>{recipe.title}</h3>
+                                        <p className="recipe-back-ingredients">{recipe.ingredients}</p>
+
+                                        <div className="recipe-back-stats">
+                                            <div>
+                                                <span>Calories</span>
+                                                <strong>{recipe.calories}</strong>
+                                            </div>
+                                            <div>
+                                                <span>Protein</span>
+                                                <strong>{recipe.protein}</strong>
+                                            </div>
+                                            <div>
+                                                <span>Carbs</span>
+                                                <strong>{recipe.carbs}</strong>
+                                            </div>
+                                            <div>
+                                                <span>Fat</span>
+                                                <strong>{recipe.fat}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
