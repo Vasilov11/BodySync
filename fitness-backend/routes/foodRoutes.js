@@ -113,6 +113,73 @@ router.post("/", async (req, res) => {
     }
 });
 
+router.put("/:id", async (req, res) => {
+    try {
+        const {
+            grams,
+            foodName,
+            caloriesPer100g,
+            proteinPer100g,
+            carbsPer100g,
+            fatPer100g,
+            date,
+        } = req.body;
+
+        const gramsNumber = Number(grams);
+        const calories100 = Number(caloriesPer100g || 0);
+        const protein100 = Number(proteinPer100g || 0);
+        const carbs100 = Number(carbsPer100g || 0);
+        const fat100 = Number(fatPer100g || 0);
+
+        const totalCalories = (gramsNumber * calories100) / 100;
+        const totalProtein = (gramsNumber * protein100) / 100;
+        const totalCarbs = (gramsNumber * carbs100) / 100;
+        const totalFat = (gramsNumber * fat100) / 100;
+
+        const updatedEntry = await FoodEntry.findByIdAndUpdate(
+            req.params.id,
+            {
+                foodName,
+                grams: gramsNumber,
+                caloriesPer100g: calories100,
+                proteinPer100g: protein100,
+                carbsPer100g: carbs100,
+                fatPer100g: fat100,
+                totalCalories: Number(totalCalories.toFixed(1)),
+                totalProtein: Number(totalProtein.toFixed(1)),
+                totalCarbs: Number(totalCarbs.toFixed(1)),
+                totalFat: Number(totalFat.toFixed(1)),
+                date,
+            },
+            { new: true }
+        );
+
+        if (!updatedEntry) {
+            return res.status(404).json({ message: "Food entry not found." });
+        }
+
+        res.json(updatedEntry);
+    } catch (error) {
+        console.error("Error updating food entry:", error);
+        res.status(500).json({ message: "Server error." });
+    }
+});
+
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedEntry = await FoodEntry.findByIdAndDelete(req.params.id);
+
+        if (!deletedEntry) {
+            return res.status(404).json({ message: "Food entry not found." });
+        }
+
+        res.json({ message: "Food entry deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting food entry:", error);
+        res.status(500).json({ message: "Server error." });
+    }
+});
+
 router.get("/:userId", async (req, res) => {
     try {
         const entries = await FoodEntry.find({ user: req.params.userId }).sort({

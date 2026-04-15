@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import PublicRoute from "./components/PublicRoute";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Food from "./pages/Food";
+import FoodDayDetails from "./pages/FoodDayDetails";
 
 function App() {
     const location = useLocation();
@@ -74,6 +75,14 @@ function App() {
                         <PublicRoute>
                             <Register />
                         </PublicRoute>
+                    }
+                />
+                <Route
+                    path="/food/day/:date"
+                    element={
+                        <ProtectedRoute>
+                            <FoodDayDetails />
+                        </ProtectedRoute>
                     }
                 />
             </Routes>

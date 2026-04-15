@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 function Food() {
     const user = JSON.parse(localStorage.getItem("user")) || {};
@@ -17,7 +18,13 @@ function Food() {
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
     const [entries, setEntries] = useState([]);
+    const today = new Date().toISOString().split("T")[0];
+
+    const todayEntries = entries.filter(
+        (entry) => entry.date?.split("T")[0] === today
+    );
     const [message, setMessage] = useState("");
+    const [editingId, setEditingId] = useState(null);
 
     const preview = useMemo(() => {
         const gramsNumber = Number(grams || 0);
@@ -96,7 +103,6 @@ function Food() {
                 params: { query: searchQuery },
             });
 
-            console.log("SEARCH RESULTS:", res.data);
             setSearchResults(res.data);
         } catch (error) {
             console.error("Error searching foods:", error);
@@ -105,16 +111,25 @@ function Food() {
     };
 
     const handleSelectFood = (food) => {
-        console.log("SELECTED FOOD:", food);
-
-        setFoodName(food.description || "");
-        setCaloriesPer100g(food.caloriesPer100g ?? "");
-        setProteinPer100g(food.proteinPer100g ?? "");
-        setCarbsPer100g(food.carbsPer100g ?? "");
-        setFatPer100g(food.fatPer100g ?? "");
-        setSearchQuery(food.description || "");
+        setFoodName(String(food.description || ""));
+        setCaloriesPer100g(String(food.caloriesPer100g ?? ""));
+        setProteinPer100g(String(food.proteinPer100g ?? ""));
+        setCarbsPer100g(String(food.carbsPer100g ?? ""));
+        setFatPer100g(String(food.fatPer100g ?? ""));
+        setSearchQuery(String(food.description || ""));
         setSearchResults([]);
         setMessage(`Selected: ${food.description}`);
+    };
+
+    const resetForm = () => {
+        setFoodName("");
+        setGrams("");
+        setCaloriesPer100g("");
+        setProteinPer100g("");
+        setCarbsPer100g("");
+        setFatPer100g("");
+        setSearchQuery("");
+        setEditingId(null);
     };
 
     const handleSubmit = async (e) => {
@@ -130,34 +145,81 @@ function Food() {
                 setMessage("Please search and select a food first.");
                 return;
             }
-            await axios.post("http://localhost:5000/api/food", {
-                user: userId,
-                foodName,
-                grams,
-                caloriesPer100g,
-                proteinPer100g,
-                carbsPer100g,
-                fatPer100g,
-                date,
-            });
 
-            setFoodName("");
-            setGrams("");
-            setCaloriesPer100g("");
-            setProteinPer100g("");
-            setCarbsPer100g("");
-            setFatPer100g("");
-            setSearchQuery("");
-            setMessage("Food entry added successfully.");
+            if (editingId) {
+                await axios.put(`http://localhost:5000/api/food/${editingId}`, {
+                    foodName,
+                    grams,
+                    caloriesPer100g,
+                    proteinPer100g,
+                    carbsPer100g,
+                    fatPer100g,
+                    date,
+                });
 
+                setMessage("Food entry updated successfully.");
+            } else {
+                await axios.post("http://localhost:5000/api/food", {
+                    user: userId,
+                    foodName,
+                    grams,
+                    caloriesPer100g,
+                    proteinPer100g,
+                    carbsPer100g,
+                    fatPer100g,
+                    date,
+                });
+
+                setMessage("Food entry added successfully.");
+            }
+
+            resetForm();
             fetchEntries();
         } catch (error) {
-            console.error("Error adding food entry:", error);
-            setMessage("Error adding food entry.");
+            console.error("Error saving food entry:", error);
+            setMessage("Error saving food entry.");
         }
     };
 
-    const todayEntries = entries.filter((entry) => entry.date === date);
+    const handleDelete = async (id) => {
+        try {
+            await axios.delete(`http://localhost:5000/api/food/${id}`);
+            setMessage("Food entry deleted successfully.");
+            fetchEntries();
+        } catch (error) {
+            console.error("Error deleting food entry:", error);
+            setMessage("Error deleting food entry.");
+        }
+    };
+
+    const handleEdit = (entry) => {
+        setEditingId(entry._id);
+        setFoodName(entry.foodName || "");
+        setGrams(String(entry.grams || ""));
+        setCaloriesPer100g(String(entry.caloriesPer100g || ""));
+        setProteinPer100g(String(entry.proteinPer100g || ""));
+        setCarbsPer100g(String(entry.carbsPer100g || ""));
+        setFatPer100g(String(entry.fatPer100g || ""));
+        setDate(entry.date || new Date().toISOString().split("T")[0]);
+        setSearchQuery(entry.foodName || "");
+        setMessage(`Editing: ${entry.foodName}`);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const groupedEntries = useMemo(() => {
+        const groups = {};
+
+        entries.forEach((entry) => {
+            if (!groups[entry.date]) {
+                groups[entry.date] = [];
+            }
+            groups[entry.date].push(entry);
+        });
+
+        return Object.entries(groups).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+    }, [entries]);
+
+    //const todayEntries = entries.filter((entry) => entry.date === date);
 
     const todayTotals = todayEntries.reduce(
         (sum, entry) => {
@@ -175,6 +237,44 @@ function Food() {
         protein: Math.max(recommendations.protein - todayTotals.protein, 0),
         carbs: Math.max(recommendations.carbs - todayTotals.carbs, 0),
         fat: Math.max(recommendations.fat - todayTotals.fat, 0),
+    };
+
+    const calorieProgressPercent =
+        recommendations.calories > 0
+            ? Math.min((todayTotals.calories / recommendations.calories) * 100, 100)
+            : 0;
+
+    const recommendedMacroPercents = {
+        carbs:
+            recommendations.carbs > 0
+                ? ((recommendations.carbs * 4) / recommendations.calories) * 100
+                : 0,
+        fat:
+            recommendations.fat > 0
+                ? ((recommendations.fat * 9) / recommendations.calories) * 100
+                : 0,
+        protein:
+            recommendations.protein > 0
+                ? ((recommendations.protein * 4) / recommendations.calories) * 100
+                : 0,
+    };
+
+    const actualTotalMacroCalories =
+        todayTotals.carbs * 4 + todayTotals.fat * 9 + todayTotals.protein * 4;
+
+    const actualMacroPercents = {
+        carbs:
+            actualTotalMacroCalories > 0
+                ? ((todayTotals.carbs * 4) / actualTotalMacroCalories) * 100
+                : 0,
+        fat:
+            actualTotalMacroCalories > 0
+                ? ((todayTotals.fat * 9) / actualTotalMacroCalories) * 100
+                : 0,
+        protein:
+            actualTotalMacroCalories > 0
+                ? ((todayTotals.protein * 4) / actualTotalMacroCalories) * 100
+                : 0,
     };
 
     return (
@@ -219,14 +319,17 @@ function Food() {
                         </div>
                     )}
 
-                    <h2 className="food-form-title">Add Food Entry</h2>
+                    <h2 className="food-form-title">
+                        {editingId ? "Edit Food Entry" : "Add Food Entry"}
+                    </h2>
 
                     <form onSubmit={handleSubmit} className="food-form">
                         <input
                             type="text"
                             placeholder="Food name"
                             value={foodName}
-                            onChange={(e) => setFoodName(e.target.value)}
+                            readOnly
+                            className="food-readonly-input"
                             required
                         />
 
@@ -297,9 +400,17 @@ function Food() {
                             </div>
                         </div>
 
-                        <button type="submit" className="food-add-btn">
-                            Add Food
-                        </button>
+                        <div className="food-form-actions">
+                            <button type="submit" className="food-add-btn">
+                                {editingId ? "Save Changes" : "Add Food"}
+                            </button>
+
+                            {editingId && (
+                                <button type="button" className="food-cancel-btn" onClick={resetForm}>
+                                    Cancel Edit
+                                </button>
+                            )}
+                        </div>
                     </form>
 
                     {message && <p className="success-message">{message}</p>}
@@ -332,72 +443,244 @@ function Food() {
                 </div>
             </section>
 
-            <section className="food-recommend-grid">
-                <div className="food-panel">
-                    <h2>Recommended Daily Intake</h2>
+            <section className="food-insights-grid">
+                <div className="food-dark-card food-calorie-card">
+                    <div className="food-dark-card-header">
+                        <h2>Daily Calories</h2>
+                        <span className="food-dark-card-subtitle">{date}</span>
+                    </div>
+
                     {recommendations.calories === 0 ? (
-                        <p className="food-muted-text">
+                        <p className="food-dark-muted">
                             Complete your profile with age, gender, height, weight, and goal.
                         </p>
                     ) : (
-                        <div className="food-summary-grid">
-                            <div className="food-summary-card">
-                                <span>Recommended Calories</span>
-                                <strong>{recommendations.calories} kcal</strong>
+                        <>
+                            <div className="food-calorie-main">
+                                <div className="food-calorie-big">
+                                    {todayTotals.calories.toFixed(0)}
+                                </div>
+                                <div className="food-calorie-unit">Cal</div>
                             </div>
-                            <div className="food-summary-card">
-                                <span>Recommended Protein</span>
-                                <strong>{recommendations.protein} g</strong>
+
+                            <p className="food-target-text">
+                                Target {recommendations.calories} kcal
+                            </p>
+
+                            <div className="food-progress-track">
+                                <div
+                                    className="food-progress-fill"
+                                    style={{ width: `${calorieProgressPercent}%` }}
+                                />
                             </div>
-                            <div className="food-summary-card">
-                                <span>Recommended Carbs</span>
-                                <strong>{recommendations.carbs} g</strong>
+
+                            <div className="food-progress-labels">
+                                <span>0</span>
+                                <span>{recommendations.calories}</span>
                             </div>
-                            <div className="food-summary-card">
-                                <span>Recommended Fat</span>
-                                <strong>{recommendations.fat} g</strong>
+
+                            <div className="food-target-range-row">
+                                <span className="food-range-label">Target range</span>
+                                <strong>
+                                    {Math.round(recommendations.calories * 0.9)} -{" "}
+                                    {Math.round(recommendations.calories * 1.1)} kcal
+                                </strong>
                             </div>
-                        </div>
+
+                            <div className="food-mini-stats">
+                                <div className="food-mini-stat">
+                                    <span>Recommended</span>
+                                    <strong>{recommendations.calories} kcal</strong>
+                                </div>
+                                <div className="food-mini-stat">
+                                    <span>Remaining</span>
+                                    <strong>{remaining.calories.toFixed(1)} kcal</strong>
+                                </div>
+                            </div>
+                        </>
                     )}
                 </div>
 
-                <div className="food-panel">
-                    <h2>Remaining Today</h2>
+                <div className="food-dark-card food-nutrition-card">
+                    <div className="food-dark-card-header">
+                        <h2>Nutrition Info</h2>
+                    </div>
+
                     {recommendations.calories === 0 ? (
-                        <p className="food-muted-text">
-                            Add profile details first to calculate remaining values.
+                        <p className="food-dark-muted">
+                            Add profile details first to calculate macro targets.
                         </p>
                     ) : (
-                        <div className="food-summary-grid">
-                            <div className="food-summary-card">
-                                <span>Remaining Calories</span>
-                                <strong>{remaining.calories.toFixed(1)} kcal</strong>
+                        <>
+                            <div className="food-macro-top-row">
+                                <div className="food-macro-top-item">
+                                    <span className="macro-dot carb-dot" />
+                                    <div>
+                                        <p>Carb</p>
+                                        <strong>{todayTotals.carbs.toFixed(1)} g</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-macro-top-item">
+                                    <span className="macro-dot fat-dot" />
+                                    <div>
+                                        <p>Fat</p>
+                                        <strong>{todayTotals.fat.toFixed(1)} g</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-macro-top-item">
+                                    <span className="macro-dot protein-dot" />
+                                    <div>
+                                        <p>Protein</p>
+                                        <strong>{todayTotals.protein.toFixed(1)} g</strong>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="food-summary-card">
-                                <span>Remaining Protein</span>
-                                <strong>{remaining.protein.toFixed(1)} g</strong>
+
+                            <div className="food-macro-compare-grid">
+                                <div className="food-macro-box">
+                                    <h3>Recommended</h3>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Carbs</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill carb-fill"
+                                                style={{ width: `${recommendedMacroPercents.carbs}%` }}
+                                            />
+                                        </div>
+                                        <strong>{recommendedMacroPercents.carbs.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Fat</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill fat-fill"
+                                                style={{ width: `${recommendedMacroPercents.fat}%` }}
+                                            />
+                                        </div>
+                                        <strong>{recommendedMacroPercents.fat.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Protein</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill protein-fill"
+                                                style={{ width: `${recommendedMacroPercents.protein}%` }}
+                                            />
+                                        </div>
+                                        <strong>{recommendedMacroPercents.protein.toFixed(0)}%</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-macro-box">
+                                    <h3>Actual</h3>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Carbs</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill carb-fill"
+                                                style={{ width: `${actualMacroPercents.carbs}%` }}
+                                            />
+                                        </div>
+                                        <strong>{actualMacroPercents.carbs.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Fat</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill fat-fill"
+                                                style={{ width: `${actualMacroPercents.fat}%` }}
+                                            />
+                                        </div>
+                                        <strong>{actualMacroPercents.fat.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Protein</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill protein-fill"
+                                                style={{ width: `${actualMacroPercents.protein}%` }}
+                                            />
+                                        </div>
+                                        <strong>{actualMacroPercents.protein.toFixed(0)}%</strong>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="food-summary-card">
-                                <span>Remaining Carbs</span>
-                                <strong>{remaining.carbs.toFixed(1)} g</strong>
+
+                            <div className="food-remaining-macro-grid">
+                                <div className="food-remaining-card">
+                                    <span>Remaining Carbs</span>
+                                    <strong>{remaining.carbs.toFixed(1)} g</strong>
+                                </div>
+                                <div className="food-remaining-card">
+                                    <span>Remaining Fat</span>
+                                    <strong>{remaining.fat.toFixed(1)} g</strong>
+                                </div>
+                                <div className="food-remaining-card">
+                                    <span>Remaining Protein</span>
+                                    <strong>{remaining.protein.toFixed(1)} g</strong>
+                                </div>
                             </div>
-                            <div className="food-summary-card">
-                                <span>Remaining Fat</span>
-                                <strong>{remaining.fat.toFixed(1)} g</strong>
-                            </div>
-                        </div>
+                        </>
                     )}
                 </div>
             </section>
 
             <section className="food-history-section">
-                <h2>Food History</h2>
+                <div className="food-history-header">
+                    <h2>Food History by Day</h2>
+                </div>
+
+                {groupedEntries.length === 0 ? (
+                    <p className="food-muted-text">No food entries yet.</p>
+                ) : (
+                    <div className="food-day-grid">
+                        {groupedEntries.map(([day, dayEntries]) => {
+                            const totals = dayEntries.reduce(
+                                (sum, entry) => {
+                                    sum.calories += Number(entry.totalCalories || 0);
+                                    sum.protein += Number(entry.totalProtein || 0);
+                                    sum.carbs += Number(entry.totalCarbs || 0);
+                                    sum.fat += Number(entry.totalFat || 0);
+                                    return sum;
+                                },
+                                { calories: 0, protein: 0, carbs: 0, fat: 0 }
+                            );
+
+                            return (
+                                <Link
+                                    key={day}
+                                    to={`/food/day/${day}`}
+                                    className="food-day-card clickable-card"
+                                >
+                                    <h3>{day}</h3>
+                                    <p>Foods: {dayEntries.length}</p>
+                                    <p>Calories: {totals.calories.toFixed(1)} kcal</p>
+                                    <p>Protein: {totals.protein.toFixed(1)} g</p>
+                                    <p>Carbs: {totals.carbs.toFixed(1)} g</p>
+                                    <p>Fat: {totals.fat.toFixed(1)} g</p>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
+            </section>
+
+            <section className="food-history-section">
+                <h2>All Food Entries</h2>
 
                 {entries.length === 0 ? (
                     <p className="food-muted-text">No food entries yet.</p>
                 ) : (
                     <div className="food-history-grid">
-                        {entries.map((entry) => (
+                        {todayEntries.map((entry) => (
                             <div key={entry._id} className="food-entry-card">
                                 <h3>{entry.foodName}</h3>
                                 <p>Date: {entry.date}</p>
@@ -406,6 +689,24 @@ function Food() {
                                 <p>Protein: {entry.totalProtein} g</p>
                                 <p>Carbs: {entry.totalCarbs} g</p>
                                 <p>Fat: {entry.totalFat} g</p>
+
+                                <div className="food-entry-actions">
+                                    <button
+                                        type="button"
+                                        className="food-edit-btn"
+                                        onClick={() => handleEdit(entry)}
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        className="food-delete-btn"
+                                        onClick={() => handleDelete(entry._id)}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
