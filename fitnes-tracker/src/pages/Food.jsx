@@ -674,7 +674,7 @@ function Food() {
             </section>
 
             <section className="food-history-section">
-                <h2>All Food Entries</h2>
+                <h2>Today's Entries</h2>
 
                 {entries.length === 0 ? (
                     <p className="food-muted-text">No food entries yet.</p>

@@ -4,9 +4,11 @@ import { Link } from "react-router-dom";
 
 function Profile() {
     const user = JSON.parse(localStorage.getItem("user")) || {};
-    const [favoritePlans, setFavoritePlans] = useState([]);
+    const userId = user._id || user.id;
 
+    const [favoritePlans, setFavoritePlans] = useState([]);
     const [workouts, setWorkouts] = useState([]);
+    const [entries, setEntries] = useState([]);
 
     useEffect(() => {
         const fetchFavorites = async () => {
@@ -50,6 +52,21 @@ function Profile() {
         fetchWorkouts();
     }, []);
 
+    useEffect(() => {
+        const fetchFoodEntries = async () => {
+            try {
+                if (!userId) return;
+
+                const res = await axios.get(`http://localhost:5000/api/food/${userId}`);
+                setEntries(res.data);
+            } catch (error) {
+                console.error("Error fetching food entries:", error);
+            }
+        };
+
+        fetchFoodEntries();
+    }, [userId]);
+
     const handleRemoveFavorite = async (planId) => {
         try {
             const token = localStorage.getItem("token");
@@ -79,6 +96,7 @@ function Profile() {
     });
 
     const [updateMessage, setUpdateMessage] = useState("");
+
     const handleChange = (e) => {
         setFormData((prev) => ({
             ...prev,
@@ -89,6 +107,11 @@ function Profile() {
     const handleProfileUpdate = async () => {
         try {
             const token = localStorage.getItem("token");
+
+            if (!token) {
+                setUpdateMessage("No token found. Please login again.");
+                return;
+            }
 
             const res = await axios.put(
                 "http://localhost:5000/api/users/update-profile",
@@ -104,11 +127,12 @@ function Profile() {
             setUpdateMessage("Profile updated successfully!");
             window.location.reload();
         } catch (err) {
-            setUpdateMessage("Error updating profile");
+            console.error("PROFILE UPDATE ERROR:", err.response?.data || err.message);
+            setUpdateMessage(
+                err.response?.data?.message || "Error updating profile"
+            );
         }
     };
-
-
 
     const totalSessions = workouts.length;
 
@@ -181,6 +205,108 @@ function Profile() {
         if (bmiNum < 30) return "Overweight";
         return "Obese";
     }, [bmi]);
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const todayEntries = entries.filter(
+        (entry) => entry.date?.split("T")[0] === today
+    );
+
+    const todayTotals = todayEntries.reduce(
+        (sum, entry) => {
+            sum.calories += Number(entry.totalCalories || 0);
+            sum.protein += Number(entry.totalProtein || 0);
+            sum.carbs += Number(entry.totalCarbs || 0);
+            sum.fat += Number(entry.totalFat || 0);
+            return sum;
+        },
+        { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+
+    const recommendations = useMemo(() => {
+        const weight = Number(formData.weight || 0);
+        const height = Number(formData.height || 0);
+        const age = Number(formData.age || 0);
+        const gender = (formData.gender || "").toLowerCase();
+        const goal = (formData.goal || "").toLowerCase();
+
+        if (!weight || !height || !age || !gender) {
+            return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+        }
+
+        let bmr = 0;
+
+        if (gender === "male") {
+            bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        } else {
+            bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
+
+        const activityFactor = 1.55;
+        let calories = bmr * activityFactor;
+
+        if (goal === "lose weight") calories -= 300;
+        if (goal === "build muscle") calories += 250;
+
+        let protein = 1.6 * weight;
+        if (goal === "build muscle") protein = 2.0 * weight;
+        if (goal === "lose weight") protein = 1.8 * weight;
+
+        const fat = 0.8 * weight;
+        const carbs = Math.max((calories - protein * 4 - fat * 9) / 4, 0);
+
+        return {
+            calories: Number(calories.toFixed(0)),
+            protein: Number(protein.toFixed(1)),
+            carbs: Number(carbs.toFixed(1)),
+            fat: Number(fat.toFixed(1)),
+        };
+    }, [formData]);
+
+    const remaining = {
+        calories: Math.max(recommendations.calories - todayTotals.calories, 0),
+        protein: Math.max(recommendations.protein - todayTotals.protein, 0),
+        carbs: Math.max(recommendations.carbs - todayTotals.carbs, 0),
+        fat: Math.max(recommendations.fat - todayTotals.fat, 0),
+    };
+
+    const calorieProgressPercent =
+        recommendations.calories > 0
+            ? Math.min((todayTotals.calories / recommendations.calories) * 100, 100)
+            : 0;
+
+    const recommendedMacroPercents = {
+        carbs:
+            recommendations.carbs > 0
+                ? ((recommendations.carbs * 4) / recommendations.calories) * 100
+                : 0,
+        fat:
+            recommendations.fat > 0
+                ? ((recommendations.fat * 9) / recommendations.calories) * 100
+                : 0,
+        protein:
+            recommendations.protein > 0
+                ? ((recommendations.protein * 4) / recommendations.calories) * 100
+                : 0,
+    };
+
+    const actualTotalMacroCalories =
+        todayTotals.carbs * 4 + todayTotals.fat * 9 + todayTotals.protein * 4;
+
+    const actualMacroPercents = {
+        carbs:
+            actualTotalMacroCalories > 0
+                ? ((todayTotals.carbs * 4) / actualTotalMacroCalories) * 100
+                : 0,
+        fat:
+            actualTotalMacroCalories > 0
+                ? ((todayTotals.fat * 9) / actualTotalMacroCalories) * 100
+                : 0,
+        protein:
+            actualTotalMacroCalories > 0
+                ? ((todayTotals.protein * 4) / actualTotalMacroCalories) * 100
+                : 0,
+    };
 
     if (!user) {
         return (
@@ -302,6 +428,196 @@ function Profile() {
                 </div>
             </div>
 
+            <section className="food-insights-grid profile-food-insights">
+                <div className="food-dark-card food-calorie-card">
+                    <div className="food-dark-card-header">
+                        <h2>Daily Calories</h2>
+                        <span className="food-dark-card-subtitle">{today}</span>
+                    </div>
+
+                    {recommendations.calories === 0 ? (
+                        <p className="food-dark-muted">
+                            Complete your profile with age, gender, height, weight, and goal.
+                        </p>
+                    ) : (
+                        <>
+                            <div className="food-calorie-main">
+                                <div className="food-calorie-big">
+                                    {todayTotals.calories.toFixed(0)}
+                                </div>
+                                <div className="food-calorie-unit">Cal</div>
+                            </div>
+
+                            <p className="food-target-text">
+                                Target {recommendations.calories} kcal
+                            </p>
+
+                            <div className="food-progress-track">
+                                <div
+                                    className="food-progress-fill"
+                                    style={{ width: `${calorieProgressPercent}%` }}
+                                />
+                            </div>
+
+                            <div className="food-progress-labels">
+                                <span>0</span>
+                                <span>{recommendations.calories}</span>
+                            </div>
+
+                            <div className="food-target-range-row">
+                                <span className="food-range-label">Target range</span>
+                                <strong>
+                                    {Math.round(recommendations.calories * 0.9)} -{" "}
+                                    {Math.round(recommendations.calories * 1.1)} kcal
+                                </strong>
+                            </div>
+
+                            <div className="food-mini-stats">
+                                <div className="food-mini-stat">
+                                    <span>Recommended</span>
+                                    <strong>{recommendations.calories} kcal</strong>
+                                </div>
+                                <div className="food-mini-stat">
+                                    <span>Remaining</span>
+                                    <strong>{remaining.calories.toFixed(1)} kcal</strong>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                <div className="food-dark-card food-nutrition-card">
+                    <div className="food-dark-card-header">
+                        <h2>Nutrition Info</h2>
+                    </div>
+
+                    {recommendations.calories === 0 ? (
+                        <p className="food-dark-muted">
+                            Add profile details first to calculate macro targets.
+                        </p>
+                    ) : (
+                        <>
+                            <div className="food-macro-top-row">
+                                <div className="food-macro-top-item">
+                                    <span className="macro-dot carb-dot" />
+                                    <div>
+                                        <p>Carb</p>
+                                        <strong>{todayTotals.carbs.toFixed(1)} g</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-macro-top-item">
+                                    <span className="macro-dot fat-dot" />
+                                    <div>
+                                        <p>Fat</p>
+                                        <strong>{todayTotals.fat.toFixed(1)} g</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-macro-top-item">
+                                    <span className="macro-dot protein-dot" />
+                                    <div>
+                                        <p>Protein</p>
+                                        <strong>{todayTotals.protein.toFixed(1)} g</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="food-macro-compare-grid">
+                                <div className="food-macro-box">
+                                    <h3>Recommended</h3>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Carbs</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill carb-fill"
+                                                style={{ width: `${recommendedMacroPercents.carbs}%` }}
+                                            />
+                                        </div>
+                                        <strong>{recommendedMacroPercents.carbs.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Fat</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill fat-fill"
+                                                style={{ width: `${recommendedMacroPercents.fat}%` }}
+                                            />
+                                        </div>
+                                        <strong>{recommendedMacroPercents.fat.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Protein</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill protein-fill"
+                                                style={{ width: `${recommendedMacroPercents.protein}%` }}
+                                            />
+                                        </div>
+                                        <strong>{recommendedMacroPercents.protein.toFixed(0)}%</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-macro-box">
+                                    <h3>Actual</h3>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Carbs</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill carb-fill"
+                                                style={{ width: `${actualMacroPercents.carbs}%` }}
+                                            />
+                                        </div>
+                                        <strong>{actualMacroPercents.carbs.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Fat</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill fat-fill"
+                                                style={{ width: `${actualMacroPercents.fat}%` }}
+                                            />
+                                        </div>
+                                        <strong>{actualMacroPercents.fat.toFixed(0)}%</strong>
+                                    </div>
+
+                                    <div className="food-macro-bar-group">
+                                        <span>Protein</span>
+                                        <div className="food-macro-line">
+                                            <div
+                                                className="food-macro-line-fill protein-fill"
+                                                style={{ width: `${actualMacroPercents.protein}%` }}
+                                            />
+                                        </div>
+                                        <strong>{actualMacroPercents.protein.toFixed(0)}%</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="food-remaining-macro-grid">
+                                <div className="food-remaining-card">
+                                    <span>Remaining Carbs</span>
+                                    <strong>{remaining.carbs.toFixed(1)} g</strong>
+                                </div>
+                                <div className="food-remaining-card">
+                                    <span>Remaining Fat</span>
+                                    <strong>{remaining.fat.toFixed(1)} g</strong>
+                                </div>
+                                <div className="food-remaining-card">
+                                    <span>Remaining Protein</span>
+                                    <strong>{remaining.protein.toFixed(1)} g</strong>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </section>
+
             <div className="profile-card">
                 <h2>Recent Activity</h2>
 
@@ -311,7 +627,6 @@ function Profile() {
                         className="latest-workout-link"
                     >
                         <div className="latest-workout-box">
-
                             <div className="latest-workout-top">
                                 <div>
                                     <h3>{latestWorkout.name}</h3>
@@ -330,7 +645,6 @@ function Profile() {
                                     </div>
                                 ))}
                             </div>
-
                         </div>
                     </Link>
                 ) : (

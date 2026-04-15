@@ -21,7 +21,7 @@ const protect = (req, res, next) => {
 
 router.put("/update-profile", protect, async (req, res) => {
     try {
-        const { id, name, goal, duration, description } = req.body;
+        const { age, gender, height, weight, goal } = req.body;
 
         const user = await User.findById(req.user.id);
 
