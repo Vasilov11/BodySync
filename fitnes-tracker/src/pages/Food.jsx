@@ -681,16 +681,46 @@ function Food() {
                 ) : (
                     <div className="food-history-grid">
                         {todayEntries.map((entry) => (
-                            <div key={entry._id} className="food-entry-card">
-                                <h3>{entry.foodName}</h3>
-                                <p>Date: {entry.date}</p>
-                                <p>Grams: {entry.grams} g</p>
-                                <p>Total Calories: {entry.totalCalories} kcal</p>
-                                <p>Protein: {entry.totalProtein} g</p>
-                                <p>Carbs: {entry.totalCarbs} g</p>
-                                <p>Fat: {entry.totalFat} g</p>
+                            <div key={entry._id} className="food-entry-card food-entry-card-detailed">
+                                <div className="food-entry-top">
+                                    <h3>{entry.foodName}</h3>
+                                    <span className="food-entry-grams-badge">{entry.grams} g</span>
+                                </div>
 
-                                <div className="food-entry-actions">
+                                <div className="food-entry-stats-grid">
+                                    <div className="food-entry-stat-mini">
+                                        <span>Calories</span>
+                                        <strong>{entry.totalCalories} kcal</strong>
+                                    </div>
+
+                                    <div className="food-entry-stat-mini">
+                                        <span>Protein</span>
+                                        <strong>{entry.totalProtein} g</strong>
+                                    </div>
+
+                                    <div className="food-entry-stat-mini">
+                                        <span>Carbs</span>
+                                        <strong>{entry.totalCarbs} g</strong>
+                                    </div>
+
+                                    <div className="food-entry-stat-mini">
+                                        <span>Fat</span>
+                                        <strong>{entry.totalFat} g</strong>
+                                    </div>
+                                </div>
+
+                                <div className="food-entry-per100">
+                                    <p>Per 100g values</p>
+
+                                    <div className="food-entry-per100-row">
+                                        <span>{entry.caloriesPer100g} kcal</span>
+                                        <span>{entry.proteinPer100g}g protein</span>
+                                        <span>{entry.carbsPer100g}g carbs</span>
+                                        <span>{entry.fatPer100g}g fat</span>
+                                    </div>
+                                </div>
+
+                                <div className="food-entry-actions food-entry-actions-modern">
                                     <button
                                         type="button"
                                         className="food-edit-btn"
